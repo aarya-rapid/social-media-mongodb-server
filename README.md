@@ -40,46 +40,46 @@ Each comment includes:
 
 ## Database Schema (MongoDB)
 
-users collection
+### users collection
 ```json
 {
-  _id: ObjectId,
-  email: string,
-  username: string,
-  password: string (hashed)
+  "_id": "ObjectId",
+  "email": "string",
+  "username": "string",
+  "password": "string (hashed)"
 }
 ```
 
-posts collection
+### posts collection
 ```json
 {
-  _id: ObjectId,
-  title: string,
-  content: string,
-  created_at: datetime,
-  updated_at: datetime,
-  author_id: ObjectId,
-  author_username: string
+  "_id": "ObjectId",
+  "title": "string",
+  "content": "string",
+  "created_at": "datetime",
+  "updated_at": "datetime",
+  "author_id": "ObjectId",
+  "author_username": "string"
 }
 ```
 
-comments collection
+### comments collection
 ```json
 {
-  _id: ObjectId,
-  post_id: ObjectId,
-  content: string,
-  created_at: datetime,
-  updated_at: datetime,
-  author_id: ObjectId,
-  author_username: string
+  "_id": "ObjectId",
+  "post_id": "ObjectId",
+  "content": "string",
+  "created_at": "datetime",
+  "updated_at": "datetime",
+  "author_id": "ObjectId",
+  "author_username": "string"
 }
 ```
 
 ### Indexes Created
-- `users.email` → unique index  
-- `posts.created_at` → for sorting  
-- `comments(post_id, created_at)` → for fast comment retrieval
+- users.email → unique index  
+- posts.created_at → for sorting  
+- comments(post_id, created_at) → for fast comment retrieval
 
 ## Running the Server
 
