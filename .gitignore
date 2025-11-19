@@ -1,0 +1,30 @@
+# Virtual environment
+.venv/
+env/
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Build
+build/
+dist/
+
+# IDE/editor
+.vscode/
+.idea/
+.DS_Store
+
+# Env files
+.env
+*.env
+
+# Mongo dumps
+dump/
+
+# Credentials / secrets
+credentials.json
+token.pickle
