@@ -1,128 +1,173 @@
 # Social Media MongoDB Server
-A FastAPI-based backend server that provides basic social media functionality, including creating posts and comments, retrieving data, updating content, and deleting entries. MongoDB is used as the data store, accessed asynchronously via Motor. The project is built and managed using Poetry.
+
+A FastAPI-based backend server with full user authentication, JWT-based security, and CRUD operations for posts and comments.  
+MongoDB (running locally) is used as the database, with Motor as the async driver and Poetry for dependency management.
 
 ## Features
 
-- Create, read, update, and delete posts
-- Create, read, update, and delete comments
-- Each post can have multiple comments
-- Fully asynchronous implementation
-- MongoDB backend
-- Automatically generated interactive API documentation using FastAPI
-- Clean project structure using Poetry environment management
+### User Authentication
+- Secure user registration
+- Password hashing using Passlib
+- Login using OAuth2 password form
+- JWT-based authentication (Bearer `<token>`)
+- Protected endpoints require valid tokens
+- Ownership enforcement (users can edit/delete only their own content)
 
-## Tech Stack
+### Posts
+- Create posts (authenticated)
+- Publicly list all posts
+- Retrieve a post by ID
+- Update & delete posts (owner only)
 
-- FastAPI – Web framework for building APIs
-- Uvicorn – ASGI server
-- MongoDB – NoSQL database
-- Motor – Asynchronous MongoDB driver
-- Pydantic – Data validation and serialization
-- Poetry – Dependency and environment management
-- python-dotenv – Environment variable handling
+Each post includes:
+- title
+- content
+- timestamps
+- author_id
+- author_username
 
-## Project Structure
+### Comments
+- Add comments to any post (authenticated)
+- Publicly list comments for a post
+- Update & delete comments (owner only)
 
+Each comment includes:
+- post_id
+- content
+- timestamps
+- author_id
+- author_username
+
+## Database Schema (MongoDB)
+
+users collection
+```json
+{
+  _id: ObjectId,
+  email: string,
+  username: string,
+  password: string (hashed)
+}
 ```
-social-media-mongodb-server/
-├── pyproject.toml
-├── .env
-└── social_media_mongodb_server/
-    ├── __init__.py
-    ├── main.py
-    ├── db.py
-    ├── models.py
-    └── routes_posts.py
+
+posts collection
+```json
+{
+  _id: ObjectId,
+  title: string,
+  content: string,
+  created_at: datetime,
+  updated_at: datetime,
+  author_id: ObjectId,
+  author_username: string
+}
 ```
 
-- **main.py** – FastAPI app initialization and router registration  
-- **db.py** – MongoDB connection handling  
-- **models.py** – Pydantic models and helper functions  
-- **routes_posts.py** – Routes for posts and comments  
-
-## Setup Instructions
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/aarya-rapid/social-media-mongodb-server.git
-cd social-media-mongodb-server
+comments collection
+```json
+{
+  _id: ObjectId,
+  post_id: ObjectId,
+  content: string,
+  created_at: datetime,
+  updated_at: datetime,
+  author_id: ObjectId,
+  author_username: string
+}
 ```
 
-### 2. Install dependencies via Poetry
+### Indexes Created
+- `users.email` → unique index  
+- `posts.created_at` → for sorting  
+- `comments(post_id, created_at)` → for fast comment retrieval
 
+## Running the Server
+
+1. Install dependencies
 ```bash
 poetry install
 ```
 
-### 3. Create a `.env` file in the project root
+2. Start MongoDB
 
-```
-MONGODB_URI=mongodb://localhost:27017
-MONGODB_DB_NAME=social_media_db
-```
-
-Ensure a MongoDB instance is running locally:
-
+    Run it locally through MongoDB Compass or:
 ```bash
-docker run -d --name mongodb -p 27017:27017 mongo:7
+mongod
 ```
 
-(or use a native MongoDB installation)
-
-### 4. Run the FastAPI server
-
+3. Start the FastAPI server
 ```bash
 poetry run uvicorn social_media_mongodb_server.main:app --reload
 ```
 
-The server will start at:
+## Environment Variables
 
+Create a `.env` file in the project root:
 ```
-http://127.0.0.1:8000
+MONGODB_URI=mongodb://localhost:27017
+MONGODB_DB_NAME=social_media_db
+SECRET_KEY=YOUR_SECRET_KEY_HERE
+ACCESS_TOKEN_EXPIRE_MINUTES=60
 ```
 
-## API Documentation
+Generate a strong secret key via an online tool or:
+```bash
+openssl rand -hex 32
+```
 
-FastAPI automatically generates interactive documentation:
+## Authentication Workflow
 
-- Swagger UI:
-  ```
-  http://127.0.0.1:8000/docs
-  ```
-- ReDoc:
-  ```
-  http://127.0.0.1:8000/redoc
-  ```
-
-## Example Endpoints
-
-### Create a Post
-
-POST `/posts/`
+### Register
+`POST /auth/register`  
+Content-Type: `application/json`
 ```json
 {
-  "title": "My first post",
-  "content": "Hello world"
+  "email": "user@example.com",
+  "username": "testuser",
+  "password": "mypassword"
 }
 ```
 
-### Create a Comment for a Post
+### Login
+`POST /auth/login`  
+Content-Type: `application/x-www-form-urlencoded`
+```
+username=user@example.com
+password=mypassword
+```
 
-POST `/posts/{post_id}/comments`
+Response:
 ```json
 {
-  "author": "John Doe",
-  "content": "Nice post!"
+  "access_token": "<JWT>",
+  "token_type": "bearer"
 }
 ```
 
-Use the Swagger or Postman collection to test full CRUD functionality.
+Use the token for all protected routes:
+```
+Authorization: Bearer <JWT>
+```
 
 ## Postman Collection
 
-A Postman collection file (`social_media_api.postman_collection.json`) can be imported into Postman to test all endpoints easily.
+A Postman collection is included containing:
+- Register user
+- Login
+- Create Post
+- List Posts
+- Create Comment
+- List Comments
+- Update/Delete Post
+- Update/Delete Comment
 
-## License
-
-This repository is intended for internal development and learning purposes. You may add a formal license if needed.
+## Project Structure
+```
+social_media_mongodb_server/
+├── main.py
+├── db.py
+├── auth.py
+├── users.py
+├── models.py
+└── routes_posts.py
+```
