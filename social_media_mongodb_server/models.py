@@ -25,6 +25,20 @@ def mongo_obj_to_dict(obj: dict) -> dict:
     obj.pop("_id", None)
     return obj
 
+# ---------- USER MODELS ----------
+
+class UserBase(BaseModel):
+    email: str
+    username: str
+
+
+class UserCreate(UserBase):
+    password: str
+
+
+class UserInDB(UserBase):
+    id: str
+
 
 # ---------- POST MODELS ----------
 
@@ -32,40 +46,39 @@ class PostBase(BaseModel):
     title: str = Field(..., example="My first post")
     content: str = Field(..., example="Hello, world!")
 
-
 class PostCreate(PostBase):
+    # client does NOT supply author fields
     pass
-
 
 class PostUpdate(BaseModel):
     title: Optional[str] = None
     content: Optional[str] = None
 
-
 class PostInDB(PostBase):
     id: str
     created_at: datetime
     updated_at: datetime
+    author_id: str
+    author_username: str
 
 
 # ---------- COMMENT MODELS ----------
 
 class CommentBase(BaseModel):
-    author: str = Field(..., example="Aarya")
+    author: Optional[str] = None  # keep optional; we'll set actual author from current_user
     content: str = Field(..., example="Nice post!")
 
-
-class CommentCreate(CommentBase):
-    pass
-
+class CommentCreate(BaseModel):
+    content: str
 
 class CommentUpdate(BaseModel):
-    author: Optional[str] = None
     content: Optional[str] = None
 
-
-class CommentInDB(CommentBase):
+class CommentInDB(BaseModel):
     id: str
     post_id: str
+    content: str
     created_at: datetime
     updated_at: datetime
+    author_id: str
+    author_username: str
