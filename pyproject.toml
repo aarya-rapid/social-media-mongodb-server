@@ -17,7 +17,8 @@ dependencies = [
     "python-multipart (>=0.0.20,<0.0.21)",
     "argon2-cffi (>=25.1.0,<26.0.0)",
     "email-validator (>=2.3.0,<3.0.0)",
-    "pydantic[email] (>=2.12.4,<3.0.0)"
+    "pydantic[email] (>=2.12.4,<3.0.0)",
+    "sendgrid (>=6.12.5,<7.0.0)"
 ]
 
 
