@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from bson import ObjectId
 
 from . import db as db_module
@@ -11,6 +11,7 @@ from .models import (
     mongo_obj_to_dict, to_object_id
 )
 from .auth import get_current_user  # current_user will be UserInDB Pydantic model
+from .models import PostWithComments
 
 router = APIRouter(prefix="/posts", tags=["Posts"])
 
@@ -59,17 +60,71 @@ async def list_posts(database=Depends(get_db)):
     return posts
 
 
-# Get single post
-@router.get("/{post_id}", response_model=PostInDB)
-async def get_post(post_id: str, database=Depends(get_db)):
+# # Get single post
+# @router.get("/{post_id}", response_model=PostInDB)
+# async def get_post(post_id: str, database=Depends(get_db)):
+#     _id = to_object_id(post_id)
+#     post = await database["posts"].find_one({"_id": _id})
+#     if not post:
+#         raise HTTPException(status_code=404, detail="Post not found")
+#     post = mongo_obj_to_dict(post)
+#     post["author_id"] = str(post["author_id"]) if post.get("author_id") else None
+#     return PostInDB(**post)
+
+# Get single post with comments
+@router.get("/{post_id}", response_model=PostWithComments)
+async def get_post_with_comments(
+    post_id: str,
+    include_comments: Optional[bool] = Query(
+        True, description="Include comments in the response"
+    ),
+    comments_limit: Optional[int] = Query(
+        None, ge=1, description="Limit the number of comments returned"
+    ),
+    comments_skip: Optional[int] = Query(
+        0, ge=0, description="Number of comments to skip for pagination"
+    ),
+    database=Depends(get_db),
+):
+    """Return a single post plus its comments by default."""
     _id = to_object_id(post_id)
+
+    # ---- Fetch post ----
     post = await database["posts"].find_one({"_id": _id})
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
+
+    # Convert Mongo document to API-friendly dict
     post = mongo_obj_to_dict(post)
     post["author_id"] = str(post["author_id"]) if post.get("author_id") else None
-    return PostInDB(**post)
 
+    comments_result = []
+
+    # ---- Fetch comments (optional + paginated) ----
+    if include_comments:
+        cursor = (
+            database["comments"]
+            .find({"post_id": _id})
+            .sort("created_at", 1)
+        )
+
+        if comments_skip:
+            cursor = cursor.skip(int(comments_skip))
+
+        if comments_limit:
+            cursor = cursor.limit(int(comments_limit))
+
+        async for c in cursor:
+            c = mongo_obj_to_dict(c)
+            c["post_id"] = str(c["post_id"])
+            c["author_id"] = str(c["author_id"]) if c.get("author_id") else None
+            comments_result.append(c)
+
+    # Build response
+    return {
+        "post": post,
+        "comments": comments_result
+    }
 
 # Update post (only owner)
 @router.put("/{post_id}", response_model=PostInDB)

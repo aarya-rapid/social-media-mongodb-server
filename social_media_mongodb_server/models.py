@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 from bson import ObjectId
 from fastapi import HTTPException
@@ -40,6 +40,29 @@ class UserInDB(UserBase):
     id: str
 
 
+# ---------- COMMENT MODELS ----------
+
+class CommentBase(BaseModel):
+    author: Optional[str] = None  # keep optional; we'll set actual author from current_user
+    content: str = Field(..., example="Nice post!")
+
+class CommentCreate(BaseModel):
+    content: str
+
+class CommentUpdate(BaseModel):
+    content: Optional[str] = None
+
+class CommentInDB(BaseModel):
+    id: str
+    post_id: str
+    content: str
+    created_at: datetime
+    updated_at: datetime
+    author_id: str
+    author_username: str
+
+
+
 # ---------- POST MODELS ----------
 
 class PostBase(BaseModel):
@@ -61,24 +84,6 @@ class PostInDB(PostBase):
     author_id: str
     author_username: str
 
-
-# ---------- COMMENT MODELS ----------
-
-class CommentBase(BaseModel):
-    author: Optional[str] = None  # keep optional; we'll set actual author from current_user
-    content: str = Field(..., example="Nice post!")
-
-class CommentCreate(BaseModel):
-    content: str
-
-class CommentUpdate(BaseModel):
-    content: Optional[str] = None
-
-class CommentInDB(BaseModel):
-    id: str
-    post_id: str
-    content: str
-    created_at: datetime
-    updated_at: datetime
-    author_id: str
-    author_username: str
+class PostWithComments(BaseModel):
+    post: PostInDB
+    comments: List[CommentInDB] = []
