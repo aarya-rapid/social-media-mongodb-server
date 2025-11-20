@@ -1,25 +1,20 @@
 from fastapi import FastAPI
-
 from .db import connect_to_mongo, close_mongo_connection
-from .routes_posts import router as posts_router
-from .auth import router as auth_router
+from .routes.auth import router as auth_router
+from .routes.posts import router as posts_router
+from .routes.comments import router as comments_router
 
-app = FastAPI(
-    title="Social Media MongoDB Server",
-    description="Simple posts + comments API using FastAPI & MongoDB",
-    version="0.1.0",
-)
+app = FastAPI(title="Social Media (MVC)")
 
+app.include_router(auth_router)
+app.include_router(posts_router)
+app.include_router(comments_router)
 
 @app.on_event("startup")
 async def on_startup():
-    connect_to_mongo()
-
+    await connect_to_mongo()
 
 @app.on_event("shutdown")
 async def on_shutdown():
-    close_mongo_connection()
+    await close_mongo_connection()
 
-
-app.include_router(posts_router)
-app.include_router(auth_router)
