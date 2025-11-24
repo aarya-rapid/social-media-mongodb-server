@@ -40,6 +40,23 @@ files = [
 ]
 
 [[package]]
+name = "another-fastapi-jwt-auth"
+version = "0.1.6"
+description = "Another iteration of fastapi-jwt-auth"
+optional = false
+python-versions = "<4,>=3.10"
+groups = ["main"]
+files = [
+    {file = "another_fastapi_jwt_auth-0.1.6-py3-none-any.whl", hash = "sha256:0b5cc3c6dfabfd40a26875734e9a0d845d03e0e4a2c18405fb83373681355942"},
+    {file = "another_fastapi_jwt_auth-0.1.6.tar.gz", hash = "sha256:41f031c675acec6d6ac1d28f0dc75eefeb878c221494a5ae704c887fa82db17f"},
+]
+
+[package.dependencies]
+fastapi = ">=0.115.12"
+pydantic = ">=2,<3"
+PyJWT = ">2"
+
+[[package]]
 name = "anyio"
 version = "4.11.0"
 description = "High-level concurrency and networking framework on top of asyncio or Trio"
@@ -1066,6 +1083,24 @@ files = [
 typing-extensions = ">=4.14.1"
 
 [[package]]
+name = "pyjwt"
+version = "2.10.1"
+description = "JSON Web Token implementation in Python"
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "PyJWT-2.10.1-py3-none-any.whl", hash = "sha256:dcdd193e30abefd5debf142f9adfcdd2b58004e644f25406ffaebd50bd98dacb"},
+    {file = "pyjwt-2.10.1.tar.gz", hash = "sha256:3cc5772eb20009233caf06e9d8a0577824723b44e6648ee0a2aedb6cf9381953"},
+]
+
+[package.extras]
+crypto = ["cryptography (>=3.4.0)"]
+dev = ["coverage[toml] (==5.0.4)", "cryptography (>=3.4.0)", "pre-commit", "pytest (>=6.0.0,<7.0.0)", "sphinx", "sphinx-rtd-theme", "zope.interface"]
+docs = ["sphinx", "sphinx-rtd-theme", "zope.interface"]
+tests = ["coverage[toml] (==5.0.4)", "pytest (>=6.0.0,<7.0.0)"]
+
+[[package]]
 name = "pymongo"
 version = "4.15.4"
 description = "PyMongo - the Official MongoDB Python driver"
@@ -1787,5 +1822,5 @@ watchdog = ["watchdog (>=2.3)"]
 
 [metadata]
 lock-version = "2.1"
-python-versions = ">=3.12"
-content-hash = "2a118988b4b807e6f2a455b1acb67ec0c8e72f8e43e8057e72b606167735d9ef"
+python-versions = ">=3.12,<4"
+content-hash = "7bdd4b1b6da2f3275e7856add028696f63dd8c282f2221522d5858ffa4661213"
