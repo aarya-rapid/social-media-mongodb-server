@@ -17,16 +17,58 @@ async def get_post_with_comments(db, post_id: str, include_comments: bool = True
             c = mongo_obj_to_dict(c)
             c["post_id"] = str(c["post_id"])
             c["author_id"] = str(c["author_id"]) if c.get("author_id") else None
+
+            # --- NEW: merge nested author info + remove duplicate field ---
+            author = c.pop("author", None)
+            if isinstance(author, dict):
+                # Ensure username stays in the top-level field you already use
+                c["author_username"] = author.get("username", c.get("author_username"))
+
+                # Optionally expose avatar from users collection
+                if author.get("avatar_url"):
+                    c["author_avatar_url"] = author["avatar_url"]
+
             comments.append(c)
         result["comments"] = comments
     return result
 
 async def list_posts_service(db, skip: int = 0, limit: int = 0):
-    rows = await list_posts(db, skip=skip, limit=limit)
+    # author_id=None → all posts
+    rows = await list_posts(db, skip=skip, limit=limit, author_id=None)
     out = []
     for p in rows:
         p = mongo_obj_to_dict(p)
         p["author_id"] = str(p["author_id"]) if p.get("author_id") else None
+
+        # author_username and author_avatar_url are already simple types
+        # If "author" ever sneaks in, flatten and drop it
+        author = p.pop("author", None)
+        if isinstance(author, dict):
+            if "username" in author and "author_username" not in p:
+                p["author_username"] = author["username"]
+            if "avatar_url" in author and "author_avatar_url" not in p:
+                p["author_avatar_url"] = author["avatar_url"]
+
+        out.append(p)
+    return out
+
+async def list_user_posts_service(db, user_id: str, skip: int = 0, limit: int = 0):
+    """
+    List posts for a specific user (author), using the same aggregation pipeline.
+    """
+    rows = await list_posts(db, skip=skip, limit=limit, author_id=user_id)
+    out = []
+    for p in rows:
+        p = mongo_obj_to_dict(p)
+        p["author_id"] = str(p["author_id"]) if p.get("author_id") else None
+
+        author = p.pop("author", None)
+        if isinstance(author, dict):
+            if "username" in author and "author_username" not in p:
+                p["author_username"] = author["username"]
+            if "avatar_url" in author and "author_avatar_url" not in p:
+                p["author_avatar_url"] = author["avatar_url"]
+
         out.append(p)
     return out
 

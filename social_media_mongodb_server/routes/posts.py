@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from typing import Optional
 from ..models.post_models import PostCreate, PostUpdate, PostWithComments, PostInDB
-from ..services.posts_service import get_post_with_comments, list_posts_service, create_post_service, update_post_service, delete_post_service
+from ..services.posts_service import get_post_with_comments, list_posts_service, create_post_service, update_post_service, delete_post_service, list_user_posts_service
 from ..routes.auth import get_current_user
 from ..db import get_db
 
@@ -10,6 +10,15 @@ router = APIRouter(prefix="/posts", tags=["Posts"])
 @router.get("/", response_model=list[PostInDB])
 async def list_posts_endpoint(skip: int = 0, limit: int = 0, db=Depends(get_db)):
     return await list_posts_service(db, skip=skip, limit=limit)
+
+@router.get("/user/{user_id}", response_model=list[PostInDB])
+async def list_user_posts_endpoint(
+    user_id: str,
+    skip: int = 0,
+    limit: int = 0,
+    db=Depends(get_db),
+):
+    return await list_user_posts_service(db, user_id, skip=skip, limit=limit)
 
 @router.post("/", response_model=PostInDB, status_code=status.HTTP_201_CREATED)
 async def create_post_endpoint(post: PostCreate, db=Depends(get_db), current_user=Depends(get_current_user)):
