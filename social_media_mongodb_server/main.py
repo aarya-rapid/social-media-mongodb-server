@@ -8,12 +8,15 @@ from .routes.auth import router as auth_router
 from .routes.posts import router as posts_router
 from .routes.comments import router as comments_router
 from .security import jwt_config
+from .routes.mcp_proxy import router as mcp_router
+
 
 app = FastAPI(title="Social Media (MVC)")
 
 app.include_router(auth_router)
 app.include_router(posts_router)
 app.include_router(comments_router)
+app.include_router(mcp_router)
 
 def custom_openapi():
     if app.openapi_schema:
