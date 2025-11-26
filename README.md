@@ -15,10 +15,9 @@ This is a fully-featured social media backend built using **FastAPI**, **MongoDB
 | Email               | SendGrid                                        |
 | AI Image Generation | Flux MCP Server → Pollinations → Local fallback |
 | Static Files        | Starlette StaticFiles                           |
-|
 
 
-
+---
 ## 📌 Core Features
 
 ### 🔐 Authentication
