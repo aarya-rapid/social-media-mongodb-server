@@ -2,6 +2,7 @@ from datetime import datetime
 from ..repositories.posts_repo import get_post_by_id, create_post, update_post, delete_post, list_posts
 from ..repositories.comments_repo import list_comments_for_post
 from ..utils.helpers import mongo_obj_to_dict
+from .imagegen_service import generate_image_for_post_service
 
 async def get_post_with_comments(db, post_id: str, include_comments: bool = True, limit: int = None, skip: int = 0):
     post = await get_post_by_id(db, post_id)
@@ -85,6 +86,24 @@ async def create_post_service(db, current_user, post_create):
     created = await create_post(db, doc)
     created = mongo_obj_to_dict(created)
     created["author_id"] = str(created["author_id"]) if created.get("author_id") else None
+    
+
+    if post_create.generate_image:
+        try:
+            updated, err_code, err_msg = await generate_image_for_post_service(
+                db,
+                str(created["id"]),
+                post_create.image_prompt,
+            )
+            if not err_code:
+                # replace with updated version that has image_url etc.
+                created = updated
+            # if it failed, you can decide to ignore or return error
+        except Exception:
+            # swallow or log, depending on how strict you want to be
+            pass
+
+
     return created
 
 async def update_post_service(db, current_user, post_id: str, post_update):

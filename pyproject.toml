@@ -22,6 +22,7 @@ dependencies = [
     "celery (>=5.5.3,<6.0.0)",
     "redis (>=7.1.0,<8.0.0)",
     "another-fastapi-jwt-auth (>=0.1.6,<0.2.0)",
+    "mcp[cli] (>=1.22.0,<2.0.0)",
 ]
 
 

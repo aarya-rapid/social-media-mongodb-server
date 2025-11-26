@@ -63,6 +63,9 @@ async def list_posts(
                     "content": 1,
                     "created_at": 1,
                     "updated_at": 1,
+                    "image_url": 1,
+                    "image_prompt": 1,
+                    "image_provider": 1,
                     "author_id": 1,
                     # if you already store author_username on the post, prefer that
                     "author_username": {
@@ -94,3 +97,22 @@ async def delete_post(db, post_id: str):
     # delete comments first
     await db["comments"].delete_many({"post_id": ObjectId(post_id)})
     return await db["posts"].delete_one({"_id": ObjectId(post_id)})
+
+async def set_post_image(
+    db,
+    post_id: str,
+    image_url: str,
+    prompt: str,
+    provider: str = "flux-imagegen-mcp",
+):
+    await db["posts"].update_one(
+        {"_id": ObjectId(post_id)},
+        {
+            "$set": {
+                "image_url": image_url,
+                "image_prompt": prompt,
+                "image_provider": provider,
+            }
+        },
+    )
+    return await db["posts"].find_one({"_id": ObjectId(post_id)})

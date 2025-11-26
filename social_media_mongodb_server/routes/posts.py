@@ -4,6 +4,8 @@ from ..models.post_models import PostCreate, PostUpdate, PostWithComments, PostI
 from ..services.posts_service import get_post_with_comments, list_posts_service, create_post_service, update_post_service, delete_post_service, list_user_posts_service
 from ..routes.auth import get_current_user
 from ..db import get_db
+from ..models.mcp_models import ImageGenRequest
+from ..services.imagegen_service import generate_image_for_post_service
 
 router = APIRouter(prefix="/posts", tags=["Posts"])
 
@@ -49,3 +51,17 @@ async def delete_post_endpoint(post_id: str, db=Depends(get_db), current_user=De
     if code != 204:
         raise HTTPException(status_code=code, detail=msg)
     return
+
+@router.post("/{post_id}/image", response_model=PostInDB)
+async def generate_post_image_endpoint(
+    post_id: str,
+    body: ImageGenRequest,
+    db=Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    updated, err_code, err_msg = await generate_image_for_post_service(
+        db, post_id, body.prompt
+    )
+    if err_code:
+        raise HTTPException(status_code=err_code, detail=err_msg)
+    return updated
