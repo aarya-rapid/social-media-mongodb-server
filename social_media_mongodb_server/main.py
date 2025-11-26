@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from another_fastapi_jwt_auth.exceptions import AuthJWTException
 from fastapi.openapi.utils import get_openapi
+from fastapi.staticfiles import StaticFiles
 
 from .db import connect_to_mongo, close_mongo_connection
 from .routes.auth import router as auth_router
@@ -17,6 +18,8 @@ app.include_router(auth_router)
 app.include_router(posts_router)
 app.include_router(comments_router)
 app.include_router(mcp_router)
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 def custom_openapi():
     if app.openapi_schema:
