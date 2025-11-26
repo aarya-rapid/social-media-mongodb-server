@@ -1,7 +1,7 @@
 {
   "info": {
     "_postman_id": "bfa47274-1b71-4cd8-a715-5af7a4e91ea1",
-    "name": "Social Media MongoDB API",
+    "name": "Social Media MongoDB API (Extended with Aggregation & ImageGen)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -19,6 +19,10 @@
     },
     {
       "key": "comment_id",
+      "value": ""
+    },
+    {
+      "key": "user_id",
       "value": ""
     }
   ],
@@ -53,13 +57,16 @@
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "  var json = pm.response.json();",
                   "  pm.collectionVariables.set(\"access_token\", json.access_token);",
+                  "  if (json.user && json.user.id) {",
+                  "    pm.collectionVariables.set(\"user_id\", json.user.id);",
+                  "  }",
                   "}"
-                ],
-                "type": "text/javascript"
+                ]
               }
             }
           ],
@@ -124,34 +131,164 @@
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
-                  "var json = pm.response.json();",
-                  "pm.collectionVariables.set(\"post_id\", json.id);"
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "  var json = pm.response.json();",
+                  "  pm.collectionVariables.set(\"post_id\", json.id);",
+                  "}"
                 ]
               }
             }
           ]
         },
         {
-          "name": "List Posts",
+          "name": "Create Post WITH Image Generation (AUTH REQUIRED)",
           "request": {
-            "method": "GET",
-            "header": [],
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"My AI post\",\n    \"content\": \"Created via Postman with image generation\",\n    \"generate_image\": true,\n    \"image_prompt\": \"A cute robot reading a book\"\n}"
+            },
             "url": {
               "raw": "{{base_url}}/posts/",
               "host": ["{{base_url}}"],
               "path": ["posts", ""]
             }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "  var json = pm.response.json();",
+                  "  pm.collectionVariables.set(\"post_id\", json.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Posts (Aggregation)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/posts/?skip=0&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["posts", ""],
+              "query": [
+                {
+                  "key": "skip",
+                  "value": "0"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
           }
         },
         {
-          "name": "Get Post by ID",
+          "name": "List Posts by User (Aggregation)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/posts/user/{{user_id}}?skip=0&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["posts", "user", "{{user_id}}"],
+              "query": [
+                {
+                  "key": "skip",
+                  "value": "0"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Post by ID (no comments)",
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{base_url}}/posts/{{post_id}}",
+              "raw": "{{base_url}}/posts/{{post_id}}?include_comments=false",
               "host": ["{{base_url}}"],
-              "path": ["posts", "{{post_id}}"]
+              "path": ["posts", "{{post_id}}"],
+              "query": [
+                {
+                  "key": "include_comments",
+                  "value": "false"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Post by ID (with comments)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/posts/{{post_id}}?include_comments=true&comments_limit=10&comments_skip=0",
+              "host": ["{{base_url}}"],
+              "path": ["posts", "{{post_id}}"],
+              "query": [
+                {
+                  "key": "include_comments",
+                  "value": "true"
+                },
+                {
+                  "key": "comments_limit",
+                  "value": "10"
+                },
+                {
+                  "key": "comments_skip",
+                  "value": "0"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Generate / Refresh Image for Post (AUTH REQUIRED)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prompt\": \"A cyberpunk city skyline at night\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/posts/{{post_id}}/image",
+              "host": ["{{base_url}}"],
+              "path": ["posts", "{{post_id}}", "image"]
             }
           }
         },
@@ -230,16 +367,19 @@
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
-                  "var json = pm.response.json();",
-                  "pm.collectionVariables.set(\"comment_id\", json.id);"
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "  var json = pm.response.json();",
+                  "  pm.collectionVariables.set(\"comment_id\", json.id);",
+                  "}"
                 ]
               }
             }
           ]
         },
         {
-          "name": "List Comments for Post",
+          "name": "List Comments for Post (Aggregation)",
           "request": {
             "method": "GET",
             "url": {
